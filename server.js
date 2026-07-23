@@ -4,22 +4,27 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
-// Full CORS Access
-app.use(cors());
+// 1. CORS Setup (Taaki GitHub Pages requests block na ho)
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
-// Supabase Credentials
+// 2. Supabase Initialization
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Root route
+// 3. Root Route (URL kholne par 'Not Found' ki jagah ye dikhega)
 app.get('/', (req, res) => {
-  res.send('Alpha Backend is Live!');
+  res.status(200).send('Alpha Backend is Live!');
 });
 
-// 1. Key Verification API
+// 4. API Endpoint: Key Verification (For App/Client)
 app.post('/api/verify', async (req, res) => {
   try {
     const { key, deviceId } = req.body;
@@ -81,7 +86,7 @@ app.post('/api/verify', async (req, res) => {
       } else {
         return res.json({ 
           success: false, 
-          message: 'Device Mismatch! Ye key kisi aur phone me locked hai.' 
+          message: 'Device Mismatch! Ye key kisi aur device me locked hai.' 
         });
       }
     }
@@ -92,7 +97,7 @@ app.post('/api/verify', async (req, res) => {
   }
 });
 
-// 2. Generate Keys API
+// 5. API Endpoint: Key Generation (For Admin Panel)
 app.post('/api/generate-key', async (req, res) => {
   try {
     const { userId, durationDays, amount } = req.body;
@@ -118,5 +123,6 @@ app.post('/api/generate-key', async (req, res) => {
   }
 });
 
+// Server Listen Port
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Project Alpha API Server Running on port ${PORT}`));
