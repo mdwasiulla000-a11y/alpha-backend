@@ -4,18 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
-// 1. Strict & Open CORS Middleware Set Karein
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
+// Full CORS Access
 app.use(cors());
 app.use(express.json());
 
@@ -25,12 +14,12 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Health check endpoint
+// Root route
 app.get('/', (req, res) => {
-  res.status(200).send('Alpha Backend is Running Online!');
+  res.send('Alpha Backend is Live!');
 });
 
-// 1. Key Verification API (For App / Client)
+// 1. Key Verification API
 app.post('/api/verify', async (req, res) => {
   try {
     const { key, deviceId } = req.body;
@@ -42,7 +31,7 @@ app.post('/api/verify', async (req, res) => {
     const { data: keyData, error } = await supabase
       .from('keys')
       .select('*')
-      .eq('key_code', key')
+      .eq('key_code', key)
       .single();
 
     if (error || !keyData) {
@@ -92,7 +81,7 @@ app.post('/api/verify', async (req, res) => {
       } else {
         return res.json({ 
           success: false, 
-          message: '❌ Device Mismatch: Ye key kisi aur phone me locked hai!' 
+          message: 'Device Mismatch! Ye key kisi aur phone me locked hai.' 
         });
       }
     }
@@ -103,7 +92,7 @@ app.post('/api/verify', async (req, res) => {
   }
 });
 
-// 2. Key Generation API (For Admin Panel)
+// 2. Generate Keys API
 app.post('/api/generate-key', async (req, res) => {
   try {
     const { userId, durationDays, amount } = req.body;
