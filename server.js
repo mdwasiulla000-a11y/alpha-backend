@@ -4,27 +4,32 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
-// 1. CORS Setup (Taaki GitHub Pages requests block na ho)
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// 🚨 UNIVERSAL CORS FIX (Preflight requests ke liye mandatory hai)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
+app.use(cors());
 app.use(express.json());
 
-// 2. Supabase Initialization
+// Supabase Initialization
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 3. Root Route (URL kholne par 'Not Found' ki jagah ye dikhega)
+// Root Route
 app.get('/', (req, res) => {
   res.status(200).send('Alpha Backend is Live!');
 });
 
-// 4. API Endpoint: Key Verification (For App/Client)
+// Key Verification Endpoint
 app.post('/api/verify', async (req, res) => {
   try {
     const { key, deviceId } = req.body;
@@ -97,7 +102,7 @@ app.post('/api/verify', async (req, res) => {
   }
 });
 
-// 5. API Endpoint: Key Generation (For Admin Panel)
+// Key Generation Endpoint
 app.post('/api/generate-key', async (req, res) => {
   try {
     const { userId, durationDays, amount } = req.body;
@@ -123,6 +128,5 @@ app.post('/api/generate-key', async (req, res) => {
   }
 });
 
-// Server Listen Port
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Project Alpha API Server Running on port ${PORT}`));
